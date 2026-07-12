@@ -20,6 +20,8 @@ dependencies = [
 deep-research-scope = "deep_research_langgraph.scope.cli:main"
 deep-research-agent = "deep_research_langgraph.research.cli:main"
 deep-research-mcp = "deep_research_langgraph.research_mcp.cli:main"
+deep-research-supervisor = "deep_research_langgraph.research_supervisor.cli:main"
+deep-research-hypervisor = "deep_research_langgraph.research_supervisor.cli:main"
 
 [dependency-groups]
 dev = [

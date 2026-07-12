@@ -79,6 +79,17 @@ def summarize_mcp_research_outputs(state: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
+def summarize_supervisor_outputs(state: Mapping[str, Any]) -> dict[str, Any]:
+    """Return a compact supervisor output payload for trace visualization."""
+
+    return {
+        "note_count": len(state.get("notes", [])),
+        "raw_note_count": len(state.get("raw_notes", [])),
+        "research_iterations": state.get("research_iterations"),
+        "notes": state.get("notes", []),
+    }
+
+
 def _summarize_state_for_metadata(*, module: str, state: Mapping[str, Any]) -> dict[str, Any]:
     if module == "scope":
         return {
@@ -96,6 +107,13 @@ def _summarize_state_for_metadata(*, module: str, state: Mapping[str, Any]) -> d
             "max_tool_call_iterations": state.get("max_tool_call_iterations"),
             "tool_call_iterations": state.get("tool_call_iterations"),
         }
+    if module == "research_supervisor":
+        return {
+            "max_supervisor_iterations": state.get("max_supervisor_iterations"),
+            "max_concurrent_researchers": state.get("max_concurrent_researchers"),
+            "max_search_iterations": state.get("max_search_iterations"),
+            "max_results_per_query": state.get("max_results_per_query"),
+        }
     return {}
 
 
@@ -106,4 +124,5 @@ __all__ = [
     "summarize_mcp_research_outputs",
     "summarize_research_outputs",
     "summarize_scope_outputs",
+    "summarize_supervisor_outputs",
 ]

@@ -69,6 +69,7 @@ Studio reads `langgraph.json` and exposes these graphs:
 - `scope_research`
 - `research_agent`
 - `research_agent_mcp`
+- `research_agent_supervisor`
 
 ## Use Ollama in course code
 
@@ -193,3 +194,34 @@ uv run deep-research-mcp display
 ```
 
 The first MCP command may download the filesystem server package through `npx`.
+
+## Research supervisor module
+
+The supervisor module follows the course multi-agent supervisor pattern. Local
+Ollama acts as the lead researcher, Tavily-backed research sub-agents gather
+evidence, and the supervisor aggregates compressed notes for a later report
+writer.
+
+Run supervised research:
+
+```bash
+uv run deep-research-supervisor run --trace --max-supervisor-iterations 4 --max-concurrent-researchers 3 --max-search-iterations 1 --max-results-per-query 2 "Compare recent approaches to AI coding assistants from OpenAI, Anthropic, and Google, focusing on agentic coding workflows."
+```
+
+The alias below runs the same module:
+
+```bash
+uv run deep-research-hypervisor run "Compare recent approaches to AI coding assistants from OpenAI, Anthropic, and Google."
+```
+
+Start the browser app:
+
+```bash
+uv run deep-research-supervisor app --trace
+```
+
+Display the supervisor graph:
+
+```bash
+uv run deep-research-supervisor display
+```
