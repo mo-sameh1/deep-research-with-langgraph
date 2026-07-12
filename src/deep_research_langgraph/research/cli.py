@@ -49,6 +49,11 @@ def build_parser() -> argparse.ArgumentParser:
     run_parser.add_argument("--max-results-per-query", type=int, default=3)
     run_parser.add_argument("--stream", action="store_true")
     run_parser.add_argument("--stream-delay", type=float, default=0.01)
+    run_parser.add_argument(
+        "--trace",
+        action="store_true",
+        help="Send this run to LangSmith when LANGSMITH_API_KEY is configured.",
+    )
 
     graph_parser = subparsers.add_parser("graph", help="Print or write Mermaid graph.")
     graph_parser.add_argument("--output", type=Path)
@@ -64,6 +69,11 @@ def build_parser() -> argparse.ArgumentParser:
     app_parser.add_argument("--host", default="127.0.0.1")
     app_parser.add_argument("--port", type=int, default=8770)
     app_parser.add_argument("--no-open", action="store_true")
+    app_parser.add_argument(
+        "--trace",
+        action="store_true",
+        help="Send browser app runs to LangSmith when LANGSMITH_API_KEY is configured.",
+    )
 
     return parser
 
@@ -80,6 +90,7 @@ def run_command(args: argparse.Namespace) -> int:
         brief,
         max_search_iterations=args.max_search_iterations,
         max_results_per_query=args.max_results_per_query,
+        trace_enabled=args.trace,
     )
     compressed = result.get("compressed_research", "")
     raw_notes = result.get("raw_notes", [])
@@ -115,7 +126,12 @@ def display_command(args: argparse.Namespace) -> int:
 def app_command(args: argparse.Namespace) -> int:
     """Start the browser app."""
 
-    run_research_app(host=args.host, port=args.port, open_browser=not args.no_open)
+    run_research_app(
+        host=args.host,
+        port=args.port,
+        open_browser=not args.no_open,
+        trace_enabled=args.trace,
+    )
     return 0
 
 

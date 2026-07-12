@@ -11,6 +11,8 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qs, urlencode, urljoin, urlparse
 from urllib.request import Request, urlopen
 
+from deep_research_langgraph.langsmith.tracing import workflow_span
+
 from .types import SearchResult
 
 USER_AGENT: Final[str] = (
@@ -30,35 +32,49 @@ class DuckDuckGoLiteSearchClient:
     def search(self, query: str, *, max_results: int) -> list[SearchResult]:
         """Return search results with snippets and optional fetched page text."""
 
-        url = "https://lite.duckduckgo.com/lite/?" + urlencode({"q": query})
-        html = _read_url(url, timeout_seconds=self.timeout_seconds)
-        parser = DuckDuckGoLiteParser()
-        parser.feed(html)
+        with workflow_span(
+            name="local_web_search",
+            run_type="tool",
+            inputs={"query": query, "max_results": max_results},
+            metadata={"provider": "duckduckgo_lite", "paid_api": False},
+            tags=["tool:local_web_search", "provider:duckduckgo-lite"],
+        ) as run:
+            url = "https://lite.duckduckgo.com/lite/?" + urlencode({"q": query})
+            html = _read_url(url, timeout_seconds=self.timeout_seconds)
+            parser = DuckDuckGoLiteParser()
+            parser.feed(html)
 
-        results: list[SearchResult] = []
-        seen_urls: set[str] = set()
-        for parsed in parser.results:
-            if parsed.url in seen_urls:
-                continue
-            seen_urls.add(parsed.url)
-            fetched_text = ""
-            if self.fetch_pages:
-                fetched_text = _fetch_page_text(
-                    parsed.url,
-                    timeout_seconds=self.timeout_seconds,
-                    max_chars=self.max_page_chars,
+            results: list[SearchResult] = []
+            seen_urls: set[str] = set()
+            for parsed in parser.results:
+                if parsed.url in seen_urls:
+                    continue
+                seen_urls.add(parsed.url)
+                fetched_text = ""
+                if self.fetch_pages:
+                    fetched_text = _fetch_page_text(
+                        parsed.url,
+                        timeout_seconds=self.timeout_seconds,
+                        max_chars=self.max_page_chars,
+                    )
+                results.append(
+                    SearchResult(
+                        title=parsed.title,
+                        url=parsed.url,
+                        snippet=parsed.snippet,
+                        fetched_text=fetched_text,
+                    )
                 )
-            results.append(
-                SearchResult(
-                    title=parsed.title,
-                    url=parsed.url,
-                    snippet=parsed.snippet,
-                    fetched_text=fetched_text,
+                if len(results) >= max_results:
+                    break
+            if run is not None:
+                run.end(
+                    outputs={
+                        "result_count": len(results),
+                        "urls": [result.url for result in results],
+                    }
                 )
-            )
-            if len(results) >= max_results:
-                break
-        return results
+            return results
 
 
 @dataclass(frozen=True)

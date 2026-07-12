@@ -46,6 +46,7 @@ def run_scope_app(
     open_browser: bool = True,
     stream: bool = False,
     stream_delay: float = 0.015,
+    trace_enabled: bool | None = None,
 ) -> None:
     """Start the local browser app."""
 
@@ -54,6 +55,7 @@ def run_scope_app(
         ScopeRequestHandler,
         stream_enabled=stream,
         stream_delay=stream_delay,
+        trace_enabled=trace_enabled,
     )
     url = f"http://{host}:{server.server_port}/"
     if open_browser:
@@ -78,11 +80,13 @@ class ScopeAppServer(ThreadingHTTPServer):
         *,
         stream_enabled: bool = False,
         stream_delay: float = 0.015,
+        trace_enabled: bool | None = None,
     ) -> None:
         super().__init__(server_address, request_handler_class)
         self.session = ScopeSession()
         self.stream_enabled = stream_enabled
         self.stream_delay = stream_delay
+        self.trace_enabled = trace_enabled
 
     def reset_session(self) -> None:
         """Start a fresh scoping session."""
@@ -164,7 +168,10 @@ class ScopeRequestHandler(BaseHTTPRequestHandler):
 
         scope_server = cast(ScopeAppServer, self.server)
         scope_server.session.add_user_message(message)
-        result = scope_server.session.run_turn()
+        result = scope_server.session.run_turn(
+            source="browser-app",
+            trace_enabled=scope_server.trace_enabled,
+        )
         self._send_json(
             {
                 "assistant_message": _latest_assistant_message(result["messages"]),
@@ -188,7 +195,10 @@ class ScopeRequestHandler(BaseHTTPRequestHandler):
         try:
             self._send_stream_event("status", text="Thinking locally with Ollama...")
             scope_server.session.add_user_message(message)
-            result = scope_server.session.run_turn()
+            result = scope_server.session.run_turn(
+                source="browser-app",
+                trace_enabled=scope_server.trace_enabled,
+            )
             assistant_message = _latest_assistant_message(result["messages"])
             if assistant_message:
                 self._send_stream_event("assistant_start")

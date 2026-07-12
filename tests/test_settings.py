@@ -15,5 +15,9 @@ def test_cloud_and_paid_provider_defaults_are_off() -> None:
 
     assert settings.langsmith_tracing is False
     assert settings.langchain_tracing_v2 is False
+    assert settings.langsmith_api_key is None
+    assert settings.langsmith_project == "deep-research-with-langgraph"
+    assert settings.langsmith_endpoint == "https://api.smith.langchain.com"
+    assert settings.langsmith_workspace_id is None
     assert settings.openai_api_key is None
     assert settings.anthropic_api_key is None

@@ -40,10 +40,15 @@ def run_research_app(
     host: str = "127.0.0.1",
     port: int = 8770,
     open_browser: bool = True,
+    trace_enabled: bool | None = None,
 ) -> None:
     """Start the local research browser app."""
 
-    server = ResearchAppServer((host, port), ResearchRequestHandler)
+    server = ResearchAppServer(
+        (host, port),
+        ResearchRequestHandler,
+        trace_enabled=trace_enabled,
+    )
     url = f"http://{host}:{server.server_port}/"
     if open_browser:
         webbrowser.open(url)
@@ -64,9 +69,12 @@ class ResearchAppServer(ThreadingHTTPServer):
         self,
         server_address: tuple[str, int],
         request_handler_class: type[BaseHTTPRequestHandler],
+        *,
+        trace_enabled: bool | None = None,
     ) -> None:
         super().__init__(server_address, request_handler_class)
         self.session = ResearchSession()
+        self.trace_enabled = trace_enabled
 
 
 class ResearchGraphServer(ThreadingHTTPServer):
@@ -139,6 +147,8 @@ class ResearchRequestHandler(BaseHTTPRequestHandler):
             research_brief,
             max_search_iterations=max_iterations,
             max_results_per_query=max_results,
+            source="browser-app",
+            trace_enabled=app_server.trace_enabled,
         )
         self._send_json(
             {

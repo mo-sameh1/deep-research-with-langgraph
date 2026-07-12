@@ -3,9 +3,9 @@
 Local-first course workspace for Deep Research with LangGraph.
 
 This setup mirrors the local Ollama approach from the adjacent
-`langgraph-essentials-python` repository, while deliberately avoiding paid LLM,
-observability, and hosting requirements. Course modules and labs are not
-implemented yet.
+`langgraph-essentials-python` repository, while keeping cloud integrations
+explicitly opt-in. Ollama remains the LLM backend; LangSmith is supported for
+free-plan tracing and local LangGraph Studio demos.
 
 ## Ready-to-use stack
 
@@ -14,7 +14,7 @@ implemented yet.
 - `langchain-ollama` using the local `langgraph-coder` model
 - JupyterLab/IPython kernel for course notebooks
 - Ruff, Pyright, and Pytest for quality checks
-- Local setup verification that does not call paid services
+- Optional LangSmith tracing and LangGraph Studio through the local CLI
 
 ## Start a course session
 
@@ -25,6 +25,44 @@ uv sync
 uv run python -m deep_research_langgraph.check_setup
 uv run jupyter lab
 ```
+
+## Optional LangSmith and Studio setup
+
+LangSmith tracing is disabled by default. To record traces for a demo, create a
+LangSmith API key, update `.env`, and keep the project name scoped to this repo:
+
+```bash
+LANGSMITH_TRACING=true
+LANGCHAIN_TRACING_V2=true
+LANGSMITH_API_KEY=lsv2-...
+LANGSMITH_PROJECT=deep-research-with-langgraph
+LANGSMITH_ENDPOINT=https://api.smith.langchain.com
+LANGSMITH_WORKSPACE_ID=
+```
+
+Then verify the setup:
+
+```bash
+uv run python -m deep_research_langgraph.langsmith.verify
+```
+
+Run either module with tracing enabled for that process:
+
+```bash
+uv run deep-research-scope run --trace "Compare local-first research agent architectures"
+uv run deep-research-agent run --trace --max-search-iterations 1 --max-results-per-query 2 "Research LangGraph persistence, interrupts, and checkpoints."
+```
+
+Start local LangGraph Studio:
+
+```bash
+uv run langgraph dev --allow-blocking
+```
+
+Studio reads `langgraph.json` and exposes two graphs:
+
+- `scope_research`
+- `research_agent`
 
 ## Use Ollama in course code
 
@@ -104,9 +142,3 @@ Display the research graph:
 ```bash
 uv run deep-research-agent display
 ```
-
-See [docs/SCOPE_MODULE.md](docs/SCOPE_MODULE.md) for the module notes and graph
-export commands.
-
-See [docs/LOCAL_SETUP.md](docs/LOCAL_SETUP.md) for Ollama setup and
-troubleshooting.

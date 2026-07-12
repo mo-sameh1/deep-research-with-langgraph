@@ -10,6 +10,13 @@ from langchain_core.messages import BaseMessage, HumanMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.graph.state import CompiledStateGraph
 
+from deep_research_langgraph.langsmith.metadata import (
+    build_trace_metadata,
+    build_trace_tags,
+    summarize_scope_outputs,
+)
+from deep_research_langgraph.langsmith.tracing import workflow_root_trace
+
 from .graph import create_default_scope_app
 from .types import ScopeResult
 
@@ -33,13 +40,28 @@ class ScopeSession:
 
         self.messages.append(HumanMessage(content=content))
 
-    def run_turn(self) -> ScopeResult:
+    def run_turn(self, *, source: str = "cli", trace_enabled: bool | None = None) -> ScopeResult:
         """Run one scoping turn and retain the graph-produced messages."""
 
-        result = cast(
-            ScopeResult,
-            self.graph.invoke({"messages": self.messages}, self.config),
-        )
+        inputs = {"messages": self.messages}
+        with workflow_root_trace(
+            name="scope.run_turn",
+            inputs={"message_count": len(self.messages)},
+            metadata=build_trace_metadata(
+                module="scope",
+                thread_id=self.thread_id,
+                source=source,
+                phase="scoping",
+                state=inputs,
+            ),
+            tags=build_trace_tags(module="scope", source=source, phase="scoping"),
+            enabled=trace_enabled,
+        ) as run:
+            result = cast(
+                ScopeResult,
+                self.graph.invoke(inputs, self.config),
+            )
+            run.end(outputs=summarize_scope_outputs(result))
         self.messages = list(result["messages"])
         return result
 

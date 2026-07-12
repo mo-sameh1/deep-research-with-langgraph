@@ -1,0 +1,8 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "scope_research": "./src/deep_research_langgraph/studio.py:scope_research",
+    "research_agent": "./src/deep_research_langgraph/studio.py:research_agent"
+  },
+  "env": ".env"
+}

@@ -1,0 +1,11 @@
+"""Compiled graphs exposed to LangGraph Studio."""
+
+from __future__ import annotations
+
+from deep_research_langgraph.research.graph import create_default_research_app
+from deep_research_langgraph.scope.graph import create_default_scope_app
+
+scope_research = create_default_scope_app()
+research_agent = create_default_research_app()
+
+__all__ = ["research_agent", "scope_research"]

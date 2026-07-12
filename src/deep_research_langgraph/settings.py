@@ -21,10 +21,20 @@ class Settings(BaseSettings):
     ollama_temperature: float = Field(default=0.2, ge=0.0, le=2.0)
     langsmith_tracing: bool = False
     langchain_tracing_v2: bool = False
+    langsmith_api_key: str | None = None
+    langsmith_project: str = "deep-research-with-langgraph"
+    langsmith_endpoint: str = "https://api.smith.langchain.com"
+    langsmith_workspace_id: str | None = None
     openai_api_key: str | None = None
     anthropic_api_key: str | None = None
 
-    @field_validator("openai_api_key", "anthropic_api_key", mode="before")
+    @field_validator(
+        "langsmith_api_key",
+        "langsmith_workspace_id",
+        "openai_api_key",
+        "anthropic_api_key",
+        mode="before",
+    )
     @classmethod
     def normalize_blank_secret(cls, value: object) -> object:
         """Treat blank optional secret values as unset."""

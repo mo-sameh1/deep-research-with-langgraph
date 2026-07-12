@@ -10,6 +10,7 @@ from urllib.error import URLError
 from urllib.parse import urljoin
 from urllib.request import urlopen
 
+from deep_research_langgraph.langsmith.config import get_langsmith_config
 from deep_research_langgraph.settings import Settings
 
 
@@ -51,6 +52,7 @@ def _model_names(tags_payload: dict[str, Any]) -> set[str]:
 def run_checks(settings: Settings) -> list[CheckResult]:
     """Run local setup checks without calling paid or hosted services."""
 
+    langsmith_config = get_langsmith_config(settings)
     results = [
         CheckResult(
             name="settings",
@@ -62,8 +64,8 @@ def run_checks(settings: Settings) -> list[CheckResult]:
         ),
         CheckResult(
             name="cloud tracing",
-            ok=not settings.langsmith_tracing and not settings.langchain_tracing_v2,
-            detail="disabled" if not settings.langsmith_tracing else "LANGSMITH_TRACING=true",
+            ok=not langsmith_config.missing_configuration,
+            detail=langsmith_config.summary,
         ),
         CheckResult(
             name="paid provider keys",

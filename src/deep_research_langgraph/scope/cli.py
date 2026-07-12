@@ -71,6 +71,11 @@ def build_parser() -> argparse.ArgumentParser:
         default=0.015,
         help="Delay between streamed text chunks in seconds.",
     )
+    run_parser.add_argument(
+        "--trace",
+        action="store_true",
+        help="Send this run to LangSmith when LANGSMITH_API_KEY is configured.",
+    )
 
     graph_parser = subparsers.add_parser(
         "graph",
@@ -116,6 +121,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Start the server without opening a browser.",
     )
+    app_parser.add_argument(
+        "--trace",
+        action="store_true",
+        help="Send browser app runs to LangSmith when LANGSMITH_API_KEY is configured.",
+    )
 
     return parser
 
@@ -135,7 +145,7 @@ def run_scope_command(args: argparse.Namespace) -> int:
 
     clarification_turns = 0
     while True:
-        result = session.run_turn()
+        result = session.run_turn(trace_enabled=args.trace)
         _print_latest_assistant_message(
             result,
             stream=args.stream,
@@ -199,6 +209,7 @@ def app_command(args: argparse.Namespace) -> int:
         open_browser=not args.no_open,
         stream=args.stream,
         stream_delay=args.stream_delay,
+        trace_enabled=args.trace,
     )
     return 0
 
