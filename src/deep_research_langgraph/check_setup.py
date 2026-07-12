@@ -72,6 +72,15 @@ def run_checks(settings: Settings) -> list[CheckResult]:
             ok=not settings.openai_api_key and not settings.anthropic_api_key,
             detail="not configured",
         ),
+        CheckResult(
+            name="research search provider",
+            ok=settings.research_search_provider != "tavily" or bool(settings.tavily_api_key),
+            detail=(
+                f"{settings.research_search_provider}"
+                if settings.research_search_provider != "tavily"
+                else "tavily with API key configured"
+            ),
+        ),
     ]
 
     base_url = settings.ollama_base_url.rstrip("/") + "/"

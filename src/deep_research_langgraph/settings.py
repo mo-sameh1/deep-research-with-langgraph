@@ -1,6 +1,7 @@
 """Environment-backed settings for local model access."""
 
 from functools import lru_cache
+from typing import Literal
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -25,12 +26,18 @@ class Settings(BaseSettings):
     langsmith_project: str = "deep-research-with-langgraph"
     langsmith_endpoint: str = "https://api.smith.langchain.com"
     langsmith_workspace_id: str | None = None
+    research_search_provider: Literal["duckduckgo", "tavily", "auto"] = "duckduckgo"
+    tavily_api_key: str | None = None
+    tavily_search_depth: Literal["basic", "advanced", "fast", "ultra-fast"] = "basic"
+    tavily_include_answer: bool = False
+    tavily_include_raw_content: bool = False
     openai_api_key: str | None = None
     anthropic_api_key: str | None = None
 
     @field_validator(
         "langsmith_api_key",
         "langsmith_workspace_id",
+        "tavily_api_key",
         "openai_api_key",
         "anthropic_api_key",
         mode="before",

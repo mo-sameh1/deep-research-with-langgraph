@@ -16,7 +16,7 @@ from .nodes import (
     SearchToolNode,
     should_continue,
 )
-from .tools import DuckDuckGoLiteSearchClient
+from .tools import create_search_client_from_settings
 from .types import ChatModelLike, ResearchInput, ResearchResult, ResearchState, SearchClient
 
 
@@ -52,11 +52,11 @@ def create_default_research_services(
     model: ChatModelLike | None = None,
     search_client: SearchClient | None = None,
 ) -> ResearchServices:
-    """Create default services using local Ollama and free web search."""
+    """Create default services using local Ollama and the configured search provider."""
 
     return ResearchServices(
         llm=model or cast(ChatModelLike, get_chat_model()),
-        search_client=search_client or DuckDuckGoLiteSearchClient(),
+        search_client=search_client or create_search_client_from_settings(),
     )
 
 
