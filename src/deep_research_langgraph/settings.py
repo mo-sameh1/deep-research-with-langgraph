@@ -1,0 +1,41 @@
+"""Environment-backed settings for local model access."""
+
+from functools import lru_cache
+
+from pydantic import Field, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    """Course settings loaded from environment variables or a local `.env` file."""
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
+    ollama_base_url: str = "http://127.0.0.1:11434"
+    ollama_model: str = "langgraph-coder"
+    ollama_num_ctx: int = Field(default=32768, ge=4096)
+    ollama_temperature: float = Field(default=0.2, ge=0.0, le=2.0)
+    langsmith_tracing: bool = False
+    langchain_tracing_v2: bool = False
+    openai_api_key: str | None = None
+    anthropic_api_key: str | None = None
+
+    @field_validator("openai_api_key", "anthropic_api_key", mode="before")
+    @classmethod
+    def normalize_blank_secret(cls, value: object) -> object:
+        """Treat blank optional secret values as unset."""
+
+        if isinstance(value, str) and not value.strip():
+            return None
+        return value
+
+
+@lru_cache
+def get_settings() -> Settings:
+    """Return one validated settings instance per process."""
+
+    return Settings()

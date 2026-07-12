@@ -1,0 +1,50 @@
+[project]
+name = "deep-research-with-langgraph"
+version = "0.1.0"
+description = "Local-first Deep Research with LangGraph course workspace using Ollama."
+readme = "README.md"
+requires-python = ">=3.12,<3.15"
+dependencies = [
+  "langchain>=1.0,<2",
+  "langchain-ollama>=1.0,<2",
+  "langgraph>=1.0,<2",
+  "pydantic-settings>=2.10,<3",
+  "python-dotenv>=1.1,<2",
+]
+
+[dependency-groups]
+dev = [
+  "ipykernel>=6.30,<8",
+  "jupyterlab>=4.4,<5",
+  "pyright>=1.1.400,<2",
+  "pytest>=8.4,<10",
+  "ruff>=0.12,<1",
+]
+
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/deep_research_langgraph"]
+
+[tool.pytest.ini_options]
+addopts = "-ra --strict-config --strict-markers"
+testpaths = ["tests"]
+
+[tool.pyright]
+include = ["src", "tests"]
+pythonVersion = "3.12"
+typeCheckingMode = "standard"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.ruff.format]
+docstring-code-format = true
+
