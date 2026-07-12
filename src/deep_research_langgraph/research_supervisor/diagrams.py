@@ -21,7 +21,7 @@ config:
     curve: linear
 ---
 flowchart TD
-    start([__start__])
+    graph_start([__start__])
     supervisor["supervisor<br/>Local Ollama lead researcher<br/>binds ConductResearch, ResearchComplete, think_tool"]
     supervisor_tools{"supervisor_tools<br/>inspect latest tool calls"}
     think["think_tool<br/>record strategic reflection"]
@@ -31,9 +31,9 @@ flowchart TD
     subagent3["research sub-agent<br/>fresh research graph state"]
     gather["collect compressed_research<br/>as ConductResearch ToolMessages"]
     finish["extract delegated notes<br/>for later report writer"]
-    end([__end__])
+    graph_end([__end__])
 
-    start --> supervisor
+    graph_start --> supervisor
     supervisor --> supervisor_tools
     supervisor_tools -->|think_tool| think
     think --> supervisor_tools
@@ -46,13 +46,13 @@ flowchart TD
     subagent3 --> gather
     gather --> supervisor
     supervisor_tools -->|ResearchComplete, no tool calls, or budget reached| finish
-    finish --> end
+    finish --> graph_end
 
     classDef default fill:#f2f0ff,stroke:#7d6ad6,color:#1d2433,line-height:1.2
     classDef decision fill:#fff8db,stroke:#d5a400,color:#1d2433,line-height:1.2
     classDef terminal fill:#e8f5ee,stroke:#3b8f62,color:#1d2433,line-height:1.2
     class supervisor_tools,fanout decision
-    class start,end terminal
+    class graph_start,graph_end terminal
 """
 
 
