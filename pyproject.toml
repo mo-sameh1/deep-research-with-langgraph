@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12,<3.15"
 dependencies = [
   "langchain>=1.0,<2",
+  "langchain-mcp-adapters>=0.3.0",
   "langchain-ollama>=1.0,<2",
   "langgraph>=1.0,<2",
   "langgraph-sdk>=0.4.2",
@@ -18,6 +19,7 @@ dependencies = [
 [project.scripts]
 deep-research-scope = "deep_research_langgraph.scope.cli:main"
 deep-research-agent = "deep_research_langgraph.research.cli:main"
+deep-research-mcp = "deep_research_langgraph.research_mcp.cli:main"
 
 [dependency-groups]
 dev = [

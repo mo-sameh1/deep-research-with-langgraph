@@ -3,14 +3,17 @@
 from __future__ import annotations
 
 import json
+import shutil
 import sys
 from dataclasses import dataclass
+from importlib.util import find_spec
 from typing import Any
 from urllib.error import URLError
 from urllib.parse import urljoin
 from urllib.request import urlopen
 
 from deep_research_langgraph.langsmith.config import get_langsmith_config
+from deep_research_langgraph.research_mcp.config import get_sample_files_dir
 from deep_research_langgraph.settings import Settings
 
 
@@ -76,6 +79,30 @@ def run_checks(settings: Settings) -> list[CheckResult]:
             name="tavily search",
             ok=bool(settings.tavily_api_key),
             detail="API key configured" if settings.tavily_api_key else "missing TAVILY_API_KEY",
+        ),
+        CheckResult(
+            name="node",
+            ok=shutil.which("node") is not None,
+            detail=shutil.which("node") or "missing node executable",
+        ),
+        CheckResult(
+            name="npx",
+            ok=shutil.which("npx") is not None,
+            detail=shutil.which("npx") or "missing npx executable",
+        ),
+        CheckResult(
+            name="mcp adapter",
+            ok=find_spec("langchain_mcp_adapters") is not None,
+            detail=(
+                "langchain_mcp_adapters installed"
+                if find_spec("langchain_mcp_adapters") is not None
+                else "missing langchain_mcp_adapters"
+            ),
+        ),
+        CheckResult(
+            name="mcp sample files",
+            ok=get_sample_files_dir().is_dir(),
+            detail=str(get_sample_files_dir()),
         ),
     ]
 

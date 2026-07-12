@@ -68,6 +68,17 @@ def summarize_research_outputs(state: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
+def summarize_mcp_research_outputs(state: Mapping[str, Any]) -> dict[str, Any]:
+    """Return a compact MCP research output payload for trace visualization."""
+
+    return {
+        "has_compressed_research": bool(state.get("compressed_research")),
+        "raw_note_count": len(state.get("raw_notes", [])),
+        "tool_call_iterations": state.get("tool_call_iterations"),
+        "compressed_research": state.get("compressed_research"),
+    }
+
+
 def _summarize_state_for_metadata(*, module: str, state: Mapping[str, Any]) -> dict[str, Any]:
     if module == "scope":
         return {
@@ -80,6 +91,11 @@ def _summarize_state_for_metadata(*, module: str, state: Mapping[str, Any]) -> d
             "max_results_per_query": state.get("max_results_per_query"),
             "search_iterations": state.get("search_iterations"),
         }
+    if module == "research_mcp":
+        return {
+            "max_tool_call_iterations": state.get("max_tool_call_iterations"),
+            "tool_call_iterations": state.get("tool_call_iterations"),
+        }
     return {}
 
 
@@ -87,6 +103,7 @@ __all__ = [
     "WORKFLOW_NAME",
     "build_trace_metadata",
     "build_trace_tags",
+    "summarize_mcp_research_outputs",
     "summarize_research_outputs",
     "summarize_scope_outputs",
 ]

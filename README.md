@@ -64,10 +64,11 @@ Start local LangGraph Studio:
 uv run langgraph dev --allow-blocking
 ```
 
-Studio reads `langgraph.json` and exposes two graphs:
+Studio reads `langgraph.json` and exposes these graphs:
 
 - `scope_research`
 - `research_agent`
+- `research_agent_mcp`
 
 ## Use Ollama in course code
 
@@ -160,3 +161,35 @@ Display the research graph:
 ```bash
 uv run deep-research-agent display
 ```
+
+## MCP research agent module
+
+The MCP module follows the course filesystem-server example. It uses local
+Ollama for model calls and `npx -y @modelcontextprotocol/server-filesystem` to
+expose the bundled `coffee_shops_sf.md` file as MCP tools.
+
+List the available MCP tools:
+
+```bash
+uv run deep-research-mcp tools --sample-dir
+```
+
+Run MCP local-file research:
+
+```bash
+uv run deep-research-mcp run --trace --max-tool-iterations 4 "Which San Francisco coffee shops are associated with third-wave coffee or specialty roasting?"
+```
+
+Start the browser app:
+
+```bash
+uv run deep-research-mcp app --trace
+```
+
+Display the MCP graph:
+
+```bash
+uv run deep-research-mcp display
+```
+
+The first MCP command may download the filesystem server package through `npx`.
