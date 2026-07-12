@@ -33,20 +33,20 @@ def test_supervisor_run_parser_accepts_budgets_and_streaming() -> None:
 def test_supervisor_display_parser_accepts_no_open() -> None:
     parser = build_parser()
 
-    args = parser.parse_args(["display", "--no-open", "--compiled"])
+    args = parser.parse_args(["display", "--no-open", "--expanded"])
 
     assert args.command == "display"
     assert args.no_open is True
-    assert args.compiled is True
+    assert args.expanded is True
 
 
-def test_supervisor_graph_parser_defaults_to_expanded_view() -> None:
+def test_supervisor_graph_parser_defaults_to_compiled_view() -> None:
     parser = build_parser()
 
     args = parser.parse_args(["graph"])
 
     assert args.command == "graph"
-    assert args.compiled is False
+    assert args.expanded is False
 
 
 def test_supervisor_cli_without_command_returns_usage_error() -> None:

@@ -19,14 +19,14 @@ def run_graph_display(
     host: str = "127.0.0.1",
     port: int = 8791,
     open_browser: bool = True,
-    compiled: bool = False,
+    expanded: bool = False,
 ) -> None:
     """Start a local web display for the supervisor graph."""
 
     server = SupervisorGraphServer(
         (host, port),
         SupervisorGraphRequestHandler,
-        compiled=compiled,
+        expanded=expanded,
     )
     url = f"http://{host}:{server.server_port}/"
     if open_browser:
@@ -91,10 +91,10 @@ class SupervisorGraphServer(ThreadingHTTPServer):
         server_address: tuple[str, int],
         request_handler_class: type[BaseHTTPRequestHandler],
         *,
-        compiled: bool = False,
+        expanded: bool = False,
     ) -> None:
         super().__init__(server_address, request_handler_class)
-        mermaid_graph = compiled_supervisor_mermaid() if compiled else expanded_supervisor_mermaid()
+        mermaid_graph = expanded_supervisor_mermaid() if expanded else compiled_supervisor_mermaid()
         self.html = graph_html(mermaid_graph)
 
 

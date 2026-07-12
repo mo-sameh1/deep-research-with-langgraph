@@ -61,9 +61,9 @@ def build_parser() -> argparse.ArgumentParser:
     graph_parser = subparsers.add_parser("graph", help="Print or write Mermaid graph.")
     graph_parser.add_argument("--output", type=Path)
     graph_parser.add_argument(
-        "--compiled",
+        "--expanded",
         action="store_true",
-        help="Show the raw compiled LangGraph view instead of the expanded teaching view.",
+        help="Show an explanatory view of the Python logic inside supervisor_tools.",
     )
 
     display_parser = subparsers.add_parser(
@@ -73,9 +73,9 @@ def build_parser() -> argparse.ArgumentParser:
     display_parser.add_argument("--port", type=int, default=8791)
     display_parser.add_argument("--no-open", action="store_true")
     display_parser.add_argument(
-        "--compiled",
+        "--expanded",
         action="store_true",
-        help="Show the raw compiled LangGraph view instead of the expanded teaching view.",
+        help="Show an explanatory view of the Python logic inside supervisor_tools.",
     )
 
     app_parser = subparsers.add_parser("app", help="Start the supervisor browser app.")
@@ -127,7 +127,7 @@ def run_command(args: argparse.Namespace) -> int:
 def graph_command(args: argparse.Namespace) -> int:
     """Render the graph as Mermaid text."""
 
-    mermaid = compiled_supervisor_mermaid() if args.compiled else expanded_supervisor_mermaid()
+    mermaid = expanded_supervisor_mermaid() if args.expanded else compiled_supervisor_mermaid()
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(mermaid, encoding="utf-8")
@@ -144,7 +144,7 @@ def display_command(args: argparse.Namespace) -> int:
         host=args.host,
         port=args.port,
         open_browser=not args.no_open,
-        compiled=args.compiled,
+        expanded=args.expanded,
     )
     return 0
 

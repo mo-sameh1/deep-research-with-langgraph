@@ -48,8 +48,8 @@ def graph_html(mermaid_graph: str) -> str:
   <main>
     <h1>Research Supervisor Graph</h1>
     <p>
-      The expanded view shows the Python logic inside supervisor_tools:
-      reflection, parallel delegated research, note collection, and completion.
+      The default view matches the course notebook's compiled LangGraph graph.
+      Use --expanded for a separate teaching diagram of supervisor_tools internals.
     </p>
     <div class="graph-shell">
       <pre class="mermaid">{escaped_graph}</pre>
