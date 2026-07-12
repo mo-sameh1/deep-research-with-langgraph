@@ -14,6 +14,7 @@ dependencies = [
 
 [project.scripts]
 deep-research-scope = "deep_research_langgraph.scope.cli:main"
+deep-research-agent = "deep_research_langgraph.research.cli:main"
 
 [dependency-groups]
 dev = [

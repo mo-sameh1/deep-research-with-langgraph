@@ -85,6 +85,26 @@ Display the LangGraph graph in a browser window:
 uv run deep-research-scope display
 ```
 
+## Research agent module
+
+Run research from a brief:
+
+```bash
+uv run deep-research-agent run "Research the official LangGraph docs and explain what persistence, interrupts, and checkpoints are used for."
+```
+
+Start the browser app:
+
+```bash
+uv run deep-research-agent app
+```
+
+Display the research graph:
+
+```bash
+uv run deep-research-agent display
+```
+
 See [docs/SCOPE_MODULE.md](docs/SCOPE_MODULE.md) for the module notes and graph
 export commands.
 
