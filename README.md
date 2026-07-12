@@ -60,16 +60,22 @@ uv run pytest
 
 ## Scope module
 
-Run the scoping phase:
+Start the browser app for the scoping phase:
+
+```bash
+uv run deep-research-scope app
+```
+
+Run the terminal version:
 
 ```bash
 uv run python -m deep_research_langgraph.scope run "Compare Gemini Deep Research and OpenAI Deep Research for a solo developer deciding which to use"
 ```
 
-Display the LangGraph graph:
+Display the LangGraph graph in a browser window:
 
 ```bash
-uv run python -m deep_research_langgraph.scope graph
+uv run deep-research-scope display
 ```
 
 See [docs/SCOPE_MODULE.md](docs/SCOPE_MODULE.md) for the module notes and graph

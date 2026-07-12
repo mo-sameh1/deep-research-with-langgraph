@@ -12,6 +12,7 @@ from langchain_core.messages import AIMessage
 from .graph import create_default_scope_app
 from .session import ScopeSession
 from .types import ScopeResult
+from .web_app import open_graph_display, run_scope_app
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -24,6 +25,10 @@ def main(argv: list[str] | None = None) -> int:
         return run_scope_command(args)
     if args.command == "graph":
         return graph_command(args)
+    if args.command == "display":
+        return display_command(args)
+    if args.command == "app":
+        return app_command(args)
 
     parser.print_help()
     return 2
@@ -62,6 +67,28 @@ def build_parser() -> argparse.ArgumentParser:
         "--output",
         type=Path,
         help="Output path. Use .png for an image, otherwise Mermaid text is written.",
+    )
+
+    display_parser = subparsers.add_parser(
+        "display",
+        help="Open the scope graph in a browser window using Mermaid.",
+    )
+    display_parser.add_argument(
+        "--no-open",
+        action="store_true",
+        help="Create the temporary HTML file without opening a browser.",
+    )
+
+    app_parser = subparsers.add_parser(
+        "app",
+        help="Start a small local browser app for the scoping interaction.",
+    )
+    app_parser.add_argument("--host", default="127.0.0.1", help="Host to bind.")
+    app_parser.add_argument("--port", type=int, default=8765, help="Port to bind.")
+    app_parser.add_argument(
+        "--no-open",
+        action="store_true",
+        help="Start the server without opening a browser.",
     )
 
     return parser
@@ -120,6 +147,21 @@ def graph_command(args: argparse.Namespace) -> int:
     else:
         output.write_text(graph.draw_mermaid(), encoding="utf-8")
     print(f"Wrote graph to {output}")
+    return 0
+
+
+def display_command(args: argparse.Namespace) -> int:
+    """Open the Mermaid graph in a browser window."""
+
+    path = open_graph_display(open_browser=not args.no_open)
+    print(f"Opened graph display: {path}")
+    return 0
+
+
+def app_command(args: argparse.Namespace) -> int:
+    """Start the browser app."""
+
+    run_scope_app(host=args.host, port=args.port, open_browser=not args.no_open)
     return 0
 
 

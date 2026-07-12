@@ -10,6 +10,14 @@ notebook.
 
 ## Run the scoping workflow
 
+Start the browser app:
+
+```bash
+uv run deep-research-scope app
+```
+
+Run the terminal flow:
+
 ```bash
 uv run python -m deep_research_langgraph.scope run "Compare Gemini Deep Research and OpenAI Deep Research for a solo developer deciding which to use"
 ```
@@ -18,6 +26,12 @@ If the model needs clarification, answer the follow-up question in the terminal.
 When the request is scoped, the command prints the generated research brief.
 
 ## Display the graph
+
+Open a Mermaid-rendered graph in a browser window:
+
+```bash
+uv run deep-research-scope display
+```
 
 Print Mermaid to the terminal:
 
@@ -45,4 +59,3 @@ uv run python -m deep_research_langgraph.scope graph --output docs/scope_graph.p
   factory, not OpenAI.
 - Software adaptation: code is split into `types`, `prompts`, `nodes`, `graph`,
   `session`, and `cli` modules so later research and report phases can reuse it.
-
