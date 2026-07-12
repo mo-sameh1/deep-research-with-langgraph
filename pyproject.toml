@@ -12,6 +12,9 @@ dependencies = [
   "python-dotenv>=1.1,<2",
 ]
 
+[project.scripts]
+deep-research-scope = "deep_research_langgraph.scope.cli:main"
+
 [dependency-groups]
 dev = [
   "ipykernel>=6.30,<8",
@@ -47,4 +50,3 @@ select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
 
 [tool.ruff.format]
 docstring-code-format = true
-

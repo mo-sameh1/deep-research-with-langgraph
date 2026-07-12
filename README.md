@@ -58,6 +58,22 @@ uv run pyright
 uv run pytest
 ```
 
+## Scope module
+
+Run the scoping phase:
+
+```bash
+uv run python -m deep_research_langgraph.scope run "Compare Gemini Deep Research and OpenAI Deep Research for a solo developer deciding which to use"
+```
+
+Display the LangGraph graph:
+
+```bash
+uv run python -m deep_research_langgraph.scope graph
+```
+
+See [docs/SCOPE_MODULE.md](docs/SCOPE_MODULE.md) for the module notes and graph
+export commands.
+
 See [docs/LOCAL_SETUP.md](docs/LOCAL_SETUP.md) for Ollama setup and
 troubleshooting.
-
