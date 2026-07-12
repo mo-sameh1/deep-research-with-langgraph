@@ -103,7 +103,7 @@ class SearchToolNode:
             messages.append(
                 ToolMessage(
                     content=observation,
-                    name="local_web_search",
+                    name="tavily_search",
                     tool_call_id=f"search-{state.get('search_iterations', 0)}-{index}",
                 )
             )

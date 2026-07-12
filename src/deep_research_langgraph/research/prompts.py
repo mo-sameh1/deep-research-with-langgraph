@@ -16,9 +16,8 @@ You are in an iterative research loop. Decide whether to search for more
 information or stop and compress the findings. This phase gathers context only;
 it does not write the final report.
 
-Available local tools:
-1. local_web_search: free web search over DuckDuckGo Lite, with page snippets and
-   optional fetched page text.
+Available tools:
+1. tavily_search: Tavily web search results with titles, URLs, and snippets.
 2. think_tool: explicit reflection recorded inside your decision.
 
 Follow this workflow:

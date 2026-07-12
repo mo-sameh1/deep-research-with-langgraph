@@ -6,20 +6,11 @@ import json
 import webbrowser
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from typing import Any, Literal, cast
+from typing import Any, cast
 
-from deep_research_langgraph.settings import get_settings
-
-from .graph import (
-    build_research_graph,
-    create_default_research_app,
-    create_default_research_services,
-)
+from .graph import create_default_research_app
 from .session import ResearchSession
-from .tools import create_search_client
 from .views import app_html, graph_html
-
-SearchProvider = Literal["duckduckgo", "tavily", "auto"]
 
 
 def run_graph_display(
@@ -50,7 +41,6 @@ def run_research_app(
     port: int = 8770,
     open_browser: bool = True,
     trace_enabled: bool | None = None,
-    search_provider: SearchProvider | None = None,
 ) -> None:
     """Start the local research browser app."""
 
@@ -58,7 +48,6 @@ def run_research_app(
         (host, port),
         ResearchRequestHandler,
         trace_enabled=trace_enabled,
-        search_provider=search_provider,
     )
     url = f"http://{host}:{server.server_port}/"
     if open_browser:
@@ -82,10 +71,9 @@ class ResearchAppServer(ThreadingHTTPServer):
         request_handler_class: type[BaseHTTPRequestHandler],
         *,
         trace_enabled: bool | None = None,
-        search_provider: SearchProvider | None = None,
     ) -> None:
         super().__init__(server_address, request_handler_class)
-        self.session = _create_research_session(search_provider=search_provider)
+        self.session = ResearchSession()
         self.trace_enabled = trace_enabled
 
 
@@ -203,25 +191,6 @@ class ResearchRequestHandler(BaseHTTPRequestHandler):
 
 class InvalidResearchPayload(ValueError):
     """Raised when the research API receives invalid input."""
-
-
-def _create_research_session(
-    *,
-    search_provider: SearchProvider | None = None,
-) -> ResearchSession:
-    if search_provider is None:
-        return ResearchSession()
-
-    settings = get_settings()
-    search_client = create_search_client(
-        provider=search_provider,
-        tavily_api_key=settings.tavily_api_key,
-        tavily_search_depth=settings.tavily_search_depth,
-        tavily_include_answer=settings.tavily_include_answer,
-        tavily_include_raw_content=settings.tavily_include_raw_content,
-    )
-    graph = build_research_graph(create_default_research_services(search_client=search_client))
-    return ResearchSession(graph=graph)
 
 
 __all__ = ["run_graph_display", "run_research_app"]

@@ -39,8 +39,7 @@ LANGSMITH_PROJECT=deep-research-with-langgraph
 LANGSMITH_ENDPOINT=https://api.smith.langchain.com
 LANGSMITH_WORKSPACE_ID=
 
-RESEARCH_SEARCH_PROVIDER=duckduckgo
-TAVILY_API_KEY=
+TAVILY_API_KEY=tvly-...
 TAVILY_SEARCH_DEPTH=basic
 TAVILY_INCLUDE_ANSWER=false
 TAVILY_INCLUDE_RAW_CONTENT=false
@@ -137,10 +136,9 @@ Run research from a brief:
 uv run deep-research-agent run "Research the official LangGraph docs and explain what persistence, interrupts, and checkpoints are used for."
 ```
 
-Use Tavily for a higher quality research demo:
+The research agent uses Tavily, matching the original course setup. Configure:
 
 ```bash
-RESEARCH_SEARCH_PROVIDER=tavily
 TAVILY_API_KEY=tvly-...
 TAVILY_SEARCH_DEPTH=basic
 ```
@@ -148,7 +146,7 @@ TAVILY_SEARCH_DEPTH=basic
 Then run:
 
 ```bash
-uv run deep-research-agent run --trace --search-provider tavily --max-search-iterations 1 --max-results-per-query 2 "Research the official LangGraph docs and explain what persistence, interrupts, and checkpoints are used for."
+uv run deep-research-agent run --trace --max-search-iterations 1 --max-results-per-query 2 "Research the official LangGraph docs and explain what persistence, interrupts, and checkpoints are used for."
 ```
 
 Start the browser app:

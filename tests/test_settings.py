@@ -21,7 +21,6 @@ def test_cloud_and_paid_provider_defaults_are_off() -> None:
     assert settings.langsmith_project == "deep-research-with-langgraph"
     assert settings.langsmith_endpoint == "https://api.smith.langchain.com"
     assert settings.langsmith_workspace_id is None
-    assert settings.research_search_provider == "duckduckgo"
     assert settings.tavily_api_key is None
     assert settings.tavily_search_depth == "basic"
     assert settings.tavily_include_answer is False

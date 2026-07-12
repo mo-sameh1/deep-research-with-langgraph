@@ -73,13 +73,9 @@ def run_checks(settings: Settings) -> list[CheckResult]:
             detail="not configured",
         ),
         CheckResult(
-            name="research search provider",
-            ok=settings.research_search_provider != "tavily" or bool(settings.tavily_api_key),
-            detail=(
-                f"{settings.research_search_provider}"
-                if settings.research_search_provider != "tavily"
-                else "tavily with API key configured"
-            ),
+            name="tavily search",
+            ok=bool(settings.tavily_api_key),
+            detail="API key configured" if settings.tavily_api_key else "missing TAVILY_API_KEY",
         ),
     ]
 
