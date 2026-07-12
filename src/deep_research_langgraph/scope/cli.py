@@ -12,7 +12,7 @@ from langchain_core.messages import AIMessage
 from .graph import create_default_scope_app
 from .session import ScopeSession
 from .types import ScopeResult
-from .web_app import open_graph_display, run_scope_app
+from .web_app import run_graph_display, run_scope_app
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -76,8 +76,10 @@ def build_parser() -> argparse.ArgumentParser:
     display_parser.add_argument(
         "--no-open",
         action="store_true",
-        help="Create the temporary HTML file without opening a browser.",
+        help="Start the graph server without opening a browser.",
     )
+    display_parser.add_argument("--host", default="127.0.0.1", help="Host to bind.")
+    display_parser.add_argument("--port", type=int, default=8767, help="Port to bind.")
 
     app_parser = subparsers.add_parser(
         "app",
@@ -153,8 +155,7 @@ def graph_command(args: argparse.Namespace) -> int:
 def display_command(args: argparse.Namespace) -> int:
     """Open the Mermaid graph in a browser window."""
 
-    path = open_graph_display(open_browser=not args.no_open)
-    print(f"Opened graph display: {path}")
+    run_graph_display(host=args.host, port=args.port, open_browser=not args.no_open)
     return 0
 
 

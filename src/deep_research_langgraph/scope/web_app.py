@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 import json
-import tempfile
 import webbrowser
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from pathlib import Path
 from typing import Any, cast
 
 from langchain_core.messages import AIMessage
@@ -17,21 +15,26 @@ from .session import ScopeSession
 from .views import app_html, graph_html
 
 
-def open_graph_display(*, open_browser: bool = True) -> Path:
-    """Render the scope graph to a temporary Mermaid HTML page."""
+def run_graph_display(
+    *,
+    host: str = "127.0.0.1",
+    port: int = 8767,
+    open_browser: bool = True,
+) -> None:
+    """Start a local web display for the Mermaid graph."""
 
-    mermaid_graph = create_default_scope_app().get_graph(xray=True).draw_mermaid()
-    with tempfile.NamedTemporaryFile(
-        mode="w",
-        encoding="utf-8",
-        suffix="-scope-graph.html",
-        delete=False,
-    ) as file:
-        file.write(graph_html(mermaid_graph))
-        path = Path(file.name)
+    server = GraphDisplayServer((host, port), GraphDisplayRequestHandler)
+    url = f"http://{host}:{server.server_port}/"
     if open_browser:
-        webbrowser.open(path.as_uri())
-    return path
+        webbrowser.open(url)
+    print(f"Scope graph display running at {url}")
+    print("Press Ctrl+C to stop.")
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        print("\nStopping scope graph display.")
+    finally:
+        server.server_close()
 
 
 def run_scope_app(
@@ -66,6 +69,40 @@ class ScopeAppServer(ThreadingHTTPServer):
     ) -> None:
         super().__init__(server_address, request_handler_class)
         self.session = ScopeSession()
+
+
+class GraphDisplayServer(ThreadingHTTPServer):
+    """HTTP server that owns the Mermaid graph HTML."""
+
+    def __init__(
+        self,
+        server_address: tuple[str, int],
+        request_handler_class: type[BaseHTTPRequestHandler],
+    ) -> None:
+        super().__init__(server_address, request_handler_class)
+        mermaid_graph = create_default_scope_app().get_graph(xray=True).draw_mermaid()
+        self.html = graph_html(mermaid_graph)
+
+
+class GraphDisplayRequestHandler(BaseHTTPRequestHandler):
+    """Serve the graph display page."""
+
+    def do_GET(self) -> None:
+        """Serve the Mermaid graph page."""
+
+        if self.path != "/":
+            self.send_error(HTTPStatus.NOT_FOUND)
+            return
+        display_server = cast(GraphDisplayServer, self.server)
+        encoded = display_server.html.encode("utf-8")
+        self.send_response(HTTPStatus.OK)
+        self.send_header("content-type", "text/html; charset=utf-8")
+        self.send_header("content-length", str(len(encoded)))
+        self.end_headers()
+        self.wfile.write(encoded)
+
+    def log_message(self, format: str, *args: Any) -> None:
+        """Keep the terminal clean while the graph display is running."""
 
 
 class ScopeRequestHandler(BaseHTTPRequestHandler):
@@ -147,4 +184,4 @@ def _latest_assistant_message(messages: list[Any]) -> str | None:
     return str(content) if content is not None else None
 
 
-__all__ = ["open_graph_display", "run_scope_app"]
+__all__ = ["run_graph_display", "run_scope_app"]
