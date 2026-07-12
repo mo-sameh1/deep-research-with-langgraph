@@ -9,7 +9,7 @@ from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any, cast
 
-from .graph import create_default_supervisor_app
+from .diagrams import compiled_supervisor_mermaid, expanded_supervisor_mermaid
 from .session import ResearchSupervisorSession
 from .views import app_html, graph_html
 
@@ -19,10 +19,15 @@ def run_graph_display(
     host: str = "127.0.0.1",
     port: int = 8791,
     open_browser: bool = True,
+    compiled: bool = False,
 ) -> None:
     """Start a local web display for the supervisor graph."""
 
-    server = SupervisorGraphServer((host, port), SupervisorGraphRequestHandler)
+    server = SupervisorGraphServer(
+        (host, port),
+        SupervisorGraphRequestHandler,
+        compiled=compiled,
+    )
     url = f"http://{host}:{server.server_port}/"
     if open_browser:
         webbrowser.open(url)
@@ -85,9 +90,11 @@ class SupervisorGraphServer(ThreadingHTTPServer):
         self,
         server_address: tuple[str, int],
         request_handler_class: type[BaseHTTPRequestHandler],
+        *,
+        compiled: bool = False,
     ) -> None:
         super().__init__(server_address, request_handler_class)
-        mermaid_graph = create_default_supervisor_app().get_graph(xray=True).draw_mermaid()
+        mermaid_graph = compiled_supervisor_mermaid() if compiled else expanded_supervisor_mermaid()
         self.html = graph_html(mermaid_graph)
 
 

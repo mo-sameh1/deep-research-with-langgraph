@@ -10,7 +10,7 @@ from pathlib import Path
 
 from deep_research_langgraph.scope.streaming import iter_text_chunks
 
-from .graph import create_default_supervisor_app
+from .diagrams import compiled_supervisor_mermaid, expanded_supervisor_mermaid
 from .session import ResearchSupervisorSession
 from .web_app import run_graph_display, run_supervisor_app
 
@@ -60,6 +60,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     graph_parser = subparsers.add_parser("graph", help="Print or write Mermaid graph.")
     graph_parser.add_argument("--output", type=Path)
+    graph_parser.add_argument(
+        "--compiled",
+        action="store_true",
+        help="Show the raw compiled LangGraph view instead of the expanded teaching view.",
+    )
 
     display_parser = subparsers.add_parser(
         "display", help="Open the supervisor graph in a browser window."
@@ -67,6 +72,11 @@ def build_parser() -> argparse.ArgumentParser:
     display_parser.add_argument("--host", default="127.0.0.1")
     display_parser.add_argument("--port", type=int, default=8791)
     display_parser.add_argument("--no-open", action="store_true")
+    display_parser.add_argument(
+        "--compiled",
+        action="store_true",
+        help="Show the raw compiled LangGraph view instead of the expanded teaching view.",
+    )
 
     app_parser = subparsers.add_parser("app", help="Start the supervisor browser app.")
     app_parser.add_argument("--host", default="127.0.0.1")
@@ -117,8 +127,7 @@ def run_command(args: argparse.Namespace) -> int:
 def graph_command(args: argparse.Namespace) -> int:
     """Render the graph as Mermaid text."""
 
-    graph = create_default_supervisor_app().get_graph(xray=True)
-    mermaid = graph.draw_mermaid()
+    mermaid = compiled_supervisor_mermaid() if args.compiled else expanded_supervisor_mermaid()
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(mermaid, encoding="utf-8")
@@ -131,7 +140,12 @@ def graph_command(args: argparse.Namespace) -> int:
 def display_command(args: argparse.Namespace) -> int:
     """Open the Mermaid graph in a browser window."""
 
-    run_graph_display(host=args.host, port=args.port, open_browser=not args.no_open)
+    run_graph_display(
+        host=args.host,
+        port=args.port,
+        open_browser=not args.no_open,
+        compiled=args.compiled,
+    )
     return 0
 
 

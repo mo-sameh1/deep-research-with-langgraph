@@ -48,8 +48,8 @@ def graph_html(mermaid_graph: str) -> str:
   <main>
     <h1>Research Supervisor Graph</h1>
     <p>
-      The supervisor delegates research tasks, executes tool calls, and loops
-      until the gathered notes are ready for a later report writer.
+      The expanded view shows the Python logic inside supervisor_tools:
+      reflection, parallel delegated research, note collection, and completion.
     </p>
     <div class="graph-shell">
       <pre class="mermaid">{escaped_graph}</pre>
