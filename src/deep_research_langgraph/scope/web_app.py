@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import time
 import webbrowser
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -12,6 +13,7 @@ from langchain_core.messages import AIMessage
 
 from .graph import create_default_scope_app
 from .session import ScopeSession
+from .streaming import iter_text_chunks
 from .views import app_html, graph_html
 
 
@@ -42,10 +44,17 @@ def run_scope_app(
     host: str = "127.0.0.1",
     port: int = 8765,
     open_browser: bool = True,
+    stream: bool = False,
+    stream_delay: float = 0.015,
 ) -> None:
     """Start the local browser app."""
 
-    server = ScopeAppServer((host, port), ScopeRequestHandler)
+    server = ScopeAppServer(
+        (host, port),
+        ScopeRequestHandler,
+        stream_enabled=stream,
+        stream_delay=stream_delay,
+    )
     url = f"http://{host}:{server.server_port}/"
     if open_browser:
         webbrowser.open(url)
@@ -66,8 +75,18 @@ class ScopeAppServer(ThreadingHTTPServer):
         self,
         server_address: tuple[str, int],
         request_handler_class: type[BaseHTTPRequestHandler],
+        *,
+        stream_enabled: bool = False,
+        stream_delay: float = 0.015,
     ) -> None:
         super().__init__(server_address, request_handler_class)
+        self.session = ScopeSession()
+        self.stream_enabled = stream_enabled
+        self.stream_delay = stream_delay
+
+    def reset_session(self) -> None:
+        """Start a fresh scoping session."""
+
         self.session = ScopeSession()
 
 
@@ -114,7 +133,8 @@ class ScopeRequestHandler(BaseHTTPRequestHandler):
         if self.path != "/":
             self.send_error(HTTPStatus.NOT_FOUND)
             return
-        self._send_html(app_html())
+        scope_server = cast(ScopeAppServer, self.server)
+        self._send_html(app_html(streaming_enabled=scope_server.stream_enabled))
 
     def do_POST(self) -> None:
         """Handle scope messages."""
@@ -122,9 +142,12 @@ class ScopeRequestHandler(BaseHTTPRequestHandler):
         if self.path == "/api/message":
             self._handle_message()
             return
+        if self.path == "/api/message/stream":
+            self._handle_stream_message()
+            return
         if self.path == "/api/reset":
             scope_server = cast(ScopeAppServer, self.server)
-            scope_server.session = ScopeSession()
+            scope_server.reset_session()
             self._send_json({"ok": True})
             return
         self.send_error(HTTPStatus.NOT_FOUND)
@@ -134,15 +157,9 @@ class ScopeRequestHandler(BaseHTTPRequestHandler):
 
     def _handle_message(self) -> None:
         try:
-            content_length = int(self.headers.get("content-length", "0"))
-            payload = json.loads(self.rfile.read(content_length).decode("utf-8"))
-            message = str(payload.get("message", "")).strip()
-        except (ValueError, json.JSONDecodeError):
-            self._send_json({"error": "Invalid JSON payload."}, HTTPStatus.BAD_REQUEST)
-            return
-
-        if not message:
-            self._send_json({"error": "Message is required."}, HTTPStatus.BAD_REQUEST)
+            message = self._read_message_payload()
+        except InvalidMessagePayload as exc:
+            self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
 
         scope_server = cast(ScopeAppServer, self.server)
@@ -154,6 +171,58 @@ class ScopeRequestHandler(BaseHTTPRequestHandler):
                 "research_brief": result.get("research_brief"),
             }
         )
+
+    def _handle_stream_message(self) -> None:
+        try:
+            message = self._read_message_payload()
+        except InvalidMessagePayload as exc:
+            self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        scope_server = cast(ScopeAppServer, self.server)
+        self.send_response(HTTPStatus.OK)
+        self.send_header("content-type", "application/x-ndjson")
+        self.send_header("cache-control", "no-cache")
+        self.end_headers()
+
+        try:
+            self._send_stream_event("status", text="Thinking locally with Ollama...")
+            scope_server.session.add_user_message(message)
+            result = scope_server.session.run_turn()
+            assistant_message = _latest_assistant_message(result["messages"])
+            if assistant_message:
+                self._send_stream_event("assistant_start")
+                self._send_text_deltas(assistant_message, delay=scope_server.stream_delay)
+            research_brief = result.get("research_brief")
+            if research_brief:
+                self._send_stream_event("brief_start")
+                self._send_text_deltas(research_brief, delay=scope_server.stream_delay)
+            self._send_stream_event("done", has_research_brief=bool(research_brief))
+        except Exception as exc:
+            self._send_stream_event("error", text=str(exc))
+
+    def _read_message_payload(self) -> str:
+        try:
+            content_length = int(self.headers.get("content-length", "0"))
+            payload = json.loads(self.rfile.read(content_length).decode("utf-8"))
+            message = str(payload.get("message", "")).strip()
+        except (ValueError, json.JSONDecodeError) as exc:
+            raise InvalidMessagePayload("Invalid JSON payload.") from exc
+
+        if not message:
+            raise InvalidMessagePayload("Message is required.")
+        return message
+
+    def _send_text_deltas(self, text: str, *, delay: float) -> None:
+        for chunk in iter_text_chunks(text):
+            self._send_stream_event("delta", text=chunk)
+            if delay > 0:
+                time.sleep(delay)
+
+    def _send_stream_event(self, event: str, **payload: Any) -> None:
+        encoded = json.dumps({"event": event, **payload}).encode("utf-8") + b"\n"
+        self.wfile.write(encoded)
+        self.wfile.flush()
 
     def _send_html(self, body: str) -> None:
         encoded = body.encode("utf-8")
@@ -182,6 +251,10 @@ def _latest_assistant_message(messages: list[Any]) -> str | None:
         return None
     content = assistant_messages[-1].content
     return str(content) if content is not None else None
+
+
+class InvalidMessagePayload(ValueError):
+    """Raised when an API request does not contain a usable message."""
 
 
 __all__ = ["run_graph_display", "run_scope_app"]

@@ -5,12 +5,14 @@ from __future__ import annotations
 import argparse
 import sys
 import textwrap
+import time
 from pathlib import Path
 
 from langchain_core.messages import AIMessage
 
 from .graph import create_default_scope_app
 from .session import ScopeSession
+from .streaming import iter_text_chunks
 from .types import ScopeResult
 from .web_app import run_graph_display, run_scope_app
 
@@ -58,6 +60,17 @@ def build_parser() -> argparse.ArgumentParser:
         default=2,
         help="Maximum number of follow-up clarification turns to allow.",
     )
+    run_parser.add_argument(
+        "--stream",
+        action="store_true",
+        help="Stream displayed assistant text after structured outputs validate.",
+    )
+    run_parser.add_argument(
+        "--stream-delay",
+        type=float,
+        default=0.015,
+        help="Delay between streamed text chunks in seconds.",
+    )
 
     graph_parser = subparsers.add_parser(
         "graph",
@@ -88,6 +101,17 @@ def build_parser() -> argparse.ArgumentParser:
     app_parser.add_argument("--host", default="127.0.0.1", help="Host to bind.")
     app_parser.add_argument("--port", type=int, default=8765, help="Port to bind.")
     app_parser.add_argument(
+        "--stream",
+        action="store_true",
+        help="Stream displayed assistant text in the browser app.",
+    )
+    app_parser.add_argument(
+        "--stream-delay",
+        type=float,
+        default=0.015,
+        help="Delay between streamed browser text chunks in seconds.",
+    )
+    app_parser.add_argument(
         "--no-open",
         action="store_true",
         help="Start the server without opening a browser.",
@@ -112,11 +136,18 @@ def run_scope_command(args: argparse.Namespace) -> int:
     clarification_turns = 0
     while True:
         result = session.run_turn()
-        _print_latest_assistant_message(result)
+        _print_latest_assistant_message(
+            result,
+            stream=args.stream,
+            stream_delay=args.stream_delay,
+        )
         research_brief = result.get("research_brief")
         if research_brief:
             print("\nResearch brief:\n")
-            print(textwrap.fill(research_brief, width=100))
+            if args.stream:
+                _print_stream(research_brief, delay=args.stream_delay)
+            else:
+                print(textwrap.fill(research_brief, width=100))
             return 0
 
         if clarification_turns >= args.max_clarifications:
@@ -162,15 +193,39 @@ def display_command(args: argparse.Namespace) -> int:
 def app_command(args: argparse.Namespace) -> int:
     """Start the browser app."""
 
-    run_scope_app(host=args.host, port=args.port, open_browser=not args.no_open)
+    run_scope_app(
+        host=args.host,
+        port=args.port,
+        open_browser=not args.no_open,
+        stream=args.stream,
+        stream_delay=args.stream_delay,
+    )
     return 0
 
 
-def _print_latest_assistant_message(result: ScopeResult) -> None:
+def _print_latest_assistant_message(
+    result: ScopeResult,
+    *,
+    stream: bool = False,
+    stream_delay: float = 0.015,
+) -> None:
     messages = result["messages"]
     assistant_messages = [message for message in messages if isinstance(message, AIMessage)]
     if assistant_messages:
-        print(f"\nAssistant:\n{assistant_messages[-1].content}")
+        print("\nAssistant:")
+        content = str(assistant_messages[-1].content)
+        if stream:
+            _print_stream(content, delay=stream_delay)
+        else:
+            print(content)
+
+
+def _print_stream(text: str, *, delay: float) -> None:
+    for chunk in iter_text_chunks(text):
+        print(chunk, end="", flush=True)
+        if delay > 0:
+            time.sleep(delay)
+    print()
 
 
 if __name__ == "__main__":

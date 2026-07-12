@@ -14,6 +14,14 @@ def test_app_html_contains_message_api() -> None:
 
     assert "/api/message" in html
     assert "Deep Research Scope" in html
+    assert "const streamingEnabled = false;" in html
+
+
+def test_app_html_can_enable_streaming() -> None:
+    html = app_html(streaming_enabled=True)
+
+    assert "/api/message/stream" in html
+    assert "const streamingEnabled = true;" in html
 
 
 def test_graph_display_server_serves_html() -> None:

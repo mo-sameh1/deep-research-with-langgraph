@@ -72,6 +72,13 @@ Run the terminal version:
 uv run python -m deep_research_langgraph.scope run "Compare Gemini Deep Research and OpenAI Deep Research for a solo developer deciding which to use"
 ```
 
+Stream displayed responses:
+
+```bash
+uv run deep-research-scope run --stream "Compare Gemini Deep Research and OpenAI Deep Research"
+uv run deep-research-scope app --stream
+```
+
 Display the LangGraph graph in a browser window:
 
 ```bash

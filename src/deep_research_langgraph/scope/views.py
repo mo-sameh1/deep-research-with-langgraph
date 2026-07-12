@@ -76,7 +76,7 @@ def graph_html(mermaid_graph: str) -> str:
 """
 
 
-def app_html() -> str:
+def app_html(*, streaming_enabled: bool = False) -> str:
     """Return the browser UI for the scope workflow."""
 
     return """<!doctype html>
@@ -242,13 +242,14 @@ def app_html() -> str:
     </section>
   </div>
   <script>
+    const streamingEnabled = __STREAMING_ENABLED__;
     const messages = document.querySelector("#messages");
     const form = document.querySelector("#scope-form");
     const textarea = document.querySelector("#message");
     const send = document.querySelector("#send");
     const status = document.querySelector("#status");
 
-    function addMessage(role, content, extraClass = "") {
+    function createMessage(role, content, extraClass = "") {
       const wrapper = document.createElement("article");
       wrapper.className = `message ${role} ${extraClass}`.trim();
 
@@ -267,6 +268,11 @@ def app_html() -> str:
       wrapper.append(label, bubble);
       messages.append(wrapper);
       wrapper.scrollIntoView({ behavior: "smooth", block: "end" });
+      return bubble;
+    }
+
+    function addMessage(role, content, extraClass = "") {
+      createMessage(role, content, extraClass);
     }
 
     form.addEventListener("submit", async (event) => {
@@ -280,6 +286,10 @@ def app_html() -> str:
       status.textContent = "Thinking locally with Ollama...";
 
       try {
+        if (streamingEnabled) {
+          await sendStreamingMessage(value);
+          return;
+        }
         const response = await fetch("/api/message", {
           method: "POST",
           headers: { "content-type": "application/json" },
@@ -297,7 +307,55 @@ def app_html() -> str:
         textarea.focus();
       }
     });
+
+    async function sendStreamingMessage(value) {
+      const response = await fetch("/api/message/stream", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ message: value })
+      });
+      if (!response.ok || !response.body) {
+        const payload = await response.json().catch(() => ({ error: "Request failed" }));
+        throw new Error(payload.error || "Request failed");
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let activeBubble = null;
+
+      while (true) {
+        const { value: chunk, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(chunk, { stream: true });
+        const lines = buffer.split("\\n");
+        buffer = lines.pop() || "";
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          const event = JSON.parse(line);
+          if (event.event === "status") {
+            status.textContent = event.text;
+          } else if (event.event === "assistant_start") {
+            activeBubble = createMessage("assistant", "");
+          } else if (event.event === "brief_start") {
+            activeBubble = createMessage("assistant", "", "brief");
+          } else if (event.event === "delta" && activeBubble) {
+            activeBubble.textContent += event.text;
+            activeBubble.parentElement.scrollIntoView({
+              behavior: "smooth",
+              block: "end"
+            });
+          } else if (event.event === "done") {
+            status.textContent = event.has_research_brief
+              ? "Scope complete."
+              : "Clarification needed.";
+          } else if (event.event === "error") {
+            throw new Error(event.text);
+          }
+        }
+      }
+    }
   </script>
 </body>
 </html>
-"""
+""".replace("__STREAMING_ENABLED__", "true" if streaming_enabled else "false")
