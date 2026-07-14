@@ -20,6 +20,11 @@ class Settings(BaseSettings):
     ollama_model: str = "langgraph-coder"
     ollama_num_ctx: int = Field(default=32768, ge=4096)
     ollama_temperature: float = Field(default=0.2, ge=0.0, le=2.0)
+    ollama_writer_num_predict: int = Field(default=512, ge=128)
+    full_agent_model_provider: Literal["ollama", "groq"] = "ollama"
+    groq_api_key: str | None = None
+    groq_model: str = "openai/gpt-oss-120b"
+    groq_max_tokens: int = Field(default=2048, ge=128)
     langsmith_tracing: bool = False
     langchain_tracing_v2: bool = False
     langsmith_api_key: str | None = None
@@ -37,6 +42,7 @@ class Settings(BaseSettings):
         "langsmith_api_key",
         "langsmith_workspace_id",
         "tavily_api_key",
+        "groq_api_key",
         "openai_api_key",
         "anthropic_api_key",
         mode="before",

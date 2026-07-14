@@ -4,7 +4,8 @@
     "scope_research": "./src/deep_research_langgraph/studio.py:scope_research",
     "research_agent": "./src/deep_research_langgraph/studio.py:research_agent",
     "research_agent_mcp": "./src/deep_research_langgraph/studio.py:research_agent_mcp",
-    "research_agent_supervisor": "./src/deep_research_langgraph/studio.py:research_agent_supervisor"
+    "research_agent_supervisor": "./src/deep_research_langgraph/studio.py:research_agent_supervisor",
+    "deep_research_agent": "./src/deep_research_langgraph/studio.py:deep_research_agent"
   },
   "env": ".env"
 }

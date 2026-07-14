@@ -60,10 +60,16 @@ def create_default_research_services(
     )
 
 
-def create_default_research_app() -> CompiledStateGraph:
+def create_default_research_app(
+    *,
+    model: ChatModelLike | None = None,
+    search_client: SearchClient | None = None,
+) -> CompiledStateGraph:
     """Create a runnable local-first research graph."""
 
-    return build_research_graph(create_default_research_services())
+    return build_research_graph(
+        create_default_research_services(model=model, search_client=search_client)
+    )
 
 
 __all__ = [

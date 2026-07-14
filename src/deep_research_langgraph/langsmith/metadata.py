@@ -90,6 +90,19 @@ def summarize_supervisor_outputs(state: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
+def summarize_full_agent_outputs(state: Mapping[str, Any]) -> dict[str, Any]:
+    """Return a compact full-agent output payload for trace visualization."""
+
+    return {
+        "has_research_brief": bool(state.get("research_brief")),
+        "has_final_report": bool(state.get("final_report")),
+        "note_count": len(state.get("notes", [])),
+        "raw_note_count": len(state.get("raw_notes", [])),
+        "final_report": state.get("final_report"),
+        "research_brief": state.get("research_brief"),
+    }
+
+
 def _summarize_state_for_metadata(*, module: str, state: Mapping[str, Any]) -> dict[str, Any]:
     if module == "scope":
         return {
@@ -114,6 +127,14 @@ def _summarize_state_for_metadata(*, module: str, state: Mapping[str, Any]) -> d
             "max_search_iterations": state.get("max_search_iterations"),
             "max_results_per_query": state.get("max_results_per_query"),
         }
+    if module == "full_agent":
+        return {
+            "message_count": len(state.get("messages", [])),
+            "max_supervisor_iterations": state.get("max_supervisor_iterations"),
+            "max_concurrent_researchers": state.get("max_concurrent_researchers"),
+            "max_search_iterations": state.get("max_search_iterations"),
+            "max_results_per_query": state.get("max_results_per_query"),
+        }
     return {}
 
 
@@ -121,6 +142,7 @@ __all__ = [
     "WORKFLOW_NAME",
     "build_trace_metadata",
     "build_trace_tags",
+    "summarize_full_agent_outputs",
     "summarize_mcp_research_outputs",
     "summarize_research_outputs",
     "summarize_scope_outputs",

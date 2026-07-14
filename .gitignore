@@ -7,10 +7,10 @@ __pycache__/
 .pyright/
 .ipynb_checkpoints/
 .jupyter/
+.langgraph_api/
 .coverage
 htmlcov/
 dist/
 build/
 *.egg-info/
 .DS_Store
-

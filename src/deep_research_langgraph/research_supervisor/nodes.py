@@ -16,6 +16,9 @@ from langgraph.types import Command
 from deep_research_langgraph.langsmith.metadata import summarize_research_outputs
 from deep_research_langgraph.langsmith.tracing import workflow_span
 from deep_research_langgraph.research.graph import create_default_research_app
+from deep_research_langgraph.research.types import (
+    ChatModelLike as ResearchChatModelLike,
+)
 from deep_research_langgraph.research.types import ResearchInput, ResearchResult
 from deep_research_langgraph.scope.dates import get_today_str
 
@@ -36,6 +39,8 @@ class SupervisorServices:
 class GraphResearchAgentRunner:
     """Run the existing research graph as an isolated sub-agent."""
 
+    model: ResearchChatModelLike | None = None
+
     async def run(
         self,
         research_topic: str,
@@ -45,7 +50,7 @@ class GraphResearchAgentRunner:
     ) -> ResearchResult:
         """Run one delegated research topic."""
 
-        graph = create_default_research_app()
+        graph = create_default_research_app(model=self.model)
         initial_state: ResearchInput = {
             "research_brief": research_topic,
             "max_search_iterations": max_search_iterations,

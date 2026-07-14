@@ -62,7 +62,8 @@ def run_checks(settings: Settings) -> list[CheckResult]:
             ok=True,
             detail=(
                 f"model={settings.ollama_model}, base_url={settings.ollama_base_url}, "
-                f"num_ctx={settings.ollama_num_ctx}"
+                f"num_ctx={settings.ollama_num_ctx}, "
+                f"writer_num_predict={settings.ollama_writer_num_predict}"
             ),
         ),
         CheckResult(
@@ -79,6 +80,17 @@ def run_checks(settings: Settings) -> list[CheckResult]:
             name="tavily search",
             ok=bool(settings.tavily_api_key),
             detail="API key configured" if settings.tavily_api_key else "missing TAVILY_API_KEY",
+        ),
+        CheckResult(
+            name="full agent model provider",
+            ok=settings.full_agent_model_provider == "ollama" or bool(settings.groq_api_key),
+            detail=(
+                "using local Ollama"
+                if settings.full_agent_model_provider == "ollama"
+                else f"using Groq model {settings.groq_model}"
+                if settings.groq_api_key
+                else "missing GROQ_API_KEY for FULL_AGENT_MODEL_PROVIDER=groq"
+            ),
         ),
         CheckResult(
             name="node",
